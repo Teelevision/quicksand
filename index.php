@@ -5,11 +5,24 @@ visit http://code.teele.eu/quicksand
 
 Copyright (C) 2013 Marius "Teelevision" Neugebauer
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 /*
@@ -37,19 +50,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-/* 
+/*
 Requirements:
 PHP >= 5.0.0
 PHP extension SQLite
 
-Version: 2013-06-10-1
+Version: 0.2 beta (2013-06-18)
 
 How does Quicksand work?
 
-Users can upload images and set a expiration time. The image is only accessable through this script within this expiration time.
-You define a maximum storage size. The oldest images are deleted when a new uplod would exceed the limit.
-Everytime the script is called it checks for expired images and deletes them.
-The script provides the functionality to download itself. That means that anyone can download this whole file unless you remove the responsible code.
+Users can upload images and set a expiration time. The image is only
+accessable through this script within this expiration time. You define a
+maximum storage size. The oldest images are deleted when a new uplod
+would exceed the limit. Everytime the script is called it checks for
+expired images and deletes them. The script provides the functionality
+to download itself. That means that anyone can download this whole file
+unless you remove the responsible code.
 */
 
 /* show all errors */
@@ -870,13 +886,13 @@ $uploads = $quicksand->getUserUploads();
 	<style type="text/css">
 	<!--
 	body { background-color: #fa6; background: -moz-linear-gradient(top, #ffd, #fff 120px, #fa6 400px) no-repeat #fa6; background: -o-linear-gradient(top, #ffd, #fff 120px, #fa6 400px) no-repeat #fa6; background: -webkit-linear-gradient(top, #ffd, #fff 120px, #fa6 400px) no-repeat #fa6; background: -ie-linear-gradient(top, #ffd, #fff 120px, #fa6 400px) no-repeat #fa6; background: linear-gradient(top, #ffd, #fff 120px, #fa6 400px) no-repeat #fa6; }
-	#main { background-color: #fc5; font-family: Arial,Helvetica,sans-serif; font-size: 14px; width: 400px; margin: 30px auto 0; padding: 8px 12px; border: 5px solid white; border-radius: 10px; box-shadow: 0 5px 10px rgba(0,0,0,.4); }
+	#main { background-color: #fc5; font-family: Arial,Helvetica,sans-serif; font-size: 14px; width: 400px; margin: 30px auto; padding: 8px 12px; border: 5px solid white; border-radius: 10px; box-shadow: 0 5px 10px rgba(0,0,0,.4); }
 	h1, h2 { display: inline; }
 	h1 a { text-decoration: none; }
 	h2 { font-size: 14px; }
 	a { color: black; }
 	p { margin: 8px 0; }
-	.error { background-color: #f85; border: 2px solid #f40; border-radius: 5px 5px 5px 5px; padding: 5px 10px; }
+	.error { background-color: #f85; border: 2px solid #f40; border-radius: 5px; padding: 5px 10px; }
 	#main > p { text-align: justify; }
 	#upload p { margin: 0; }
 	#upload p:first-letter { font-size: 40px; font-weight: bold; color: white; vertical-align: sub; }
@@ -885,7 +901,7 @@ $uploads = $quicksand->getUserUploads();
 	select option { padding: 0 10px; }
 	footer { font-size: 80%; }
 	.notice { font-size: 80%; display: block; }
-	#uploads ul { list-style: none; margin: 0; padding-left: 10px; }
+	#uploads ul { list-style: none; margin: 0; padding: 5px 10px; max-height: 100px; overflow: auto; border: 5px solid white; border-radius: 4px; background-color: white; }
 	#uploads .delete { width: 16px; height: 16px; display: inline-block; vertical-align: middle; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAAZiS0dEAAAAAAAA+UO7fwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9oMEhUOCMokI9sAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAABgElEQVQ4y63TMWtTURjG8d+bphI76BLqmqU4HL+CkG/kIqXbPdkEQXDxGzi49SO0YBHB0aJ0UFHBwQpSa0zbJMfhJvUmpov4wnPh3HOf/+G873P5n3WYonqTorpqf7ur2u5avf8+RXWSovxIUT6vgDxNUb24HWWvpzQha/ApRdUlr89ebNC/txkefrUPL1NUW+Rpi7MLtq7pb7Y5GNpvQ4doo4VAwQ3ycQqnuE4eYR3tdhiPi1b9af2AUYq8TjUHFIxxgTOMcIrvE3aPy+DBsWx2KOgcloxBNKjR0Hz9nEvzAgDWDkueMpivS0PwmsH9tyU3Pa3lbk8oU6zS2R+WhSnM6yRF1SZPa5BJow/ndWP7N4WDYT2dBcDHFNUGeTI7bTzT+UwjDKf0olyO8BLwapaD6ZL5A4Mv7HfoD/FzWN/grxx8I24t5eAdg7v1ZDxJ4c6vxQi3GhEAz1LkoxTlKEXZTZGXm7XTlfd6yl5P2enKK/+HRyny4xXmJuRK87/Wb3MTloU75rlxAAAAAElFTkSuQmCC'); }
 	-->
 	</style>
@@ -944,22 +960,22 @@ $uploads = $quicksand->getUserUploads();
 			</p>
 		</form>
 		
-		<p title="This is the total storage size that is shared by all users. If it exceeds, new images edge out old ones.">Used storage: <?php echo Quicksand::getReadableSize($quicksand->getUsedStorageSize()); echo $storageSize ? " / ".Quicksand::getReadableSize($storageSize) : ""; ?></p>
+		<p title="This is the total storage size that is shared by all users. If it exceeds, new images edge out old ones.">Shared storage: <?php echo Quicksand::getReadableSize($quicksand->getUsedStorageSize()); echo $storageSize ? " / ".Quicksand::getReadableSize($storageSize) : ""; ?></p>
 		
+		<?php if (count($uploads)) { ?>
 		<div id="uploads">
-			Your uploads
-			<span class="notice">Your uploads are saved in cookies to provide you with this list.</span>
-			<ul>
-				<?php foreach ($uploads as $id => $data) { ?>
-					<li>
-						<a href="?<?php echo $id; ?>&amp;del=<?php echo $data['delcode']; ?>"><span class="delete"></span></a>
-						<a href="?<?php echo $id; ?>"><?php echo Quicksand::getFileExtensionFromMime($data['mime']); ?></a>,
-						<?php echo Quicksand::getReadableSize($data['size']); ?>,
-						<?php echo date(DATE_ATOM, $data['del']); ?>
-					</li>
-				<?php } ?>
-			</ul>
+			Your uploads:
+			<ul><?php foreach ($uploads as $id => $data) { ?>
+				<li>
+					<a href="?<?php echo $id; ?>&amp;del=<?php echo $data['delcode']; ?>"><span class="delete"></span></a>
+					<a href="?<?php echo $id; ?>"><?php echo Quicksand::getFileExtensionFromMime($data['mime']); ?></a>,
+					<?php echo Quicksand::getReadableSize($data['size']); ?>,
+					<?php echo date(DATE_ATOM, $data['del']); ?>
+				</li>
+			<?php } ?></ul>
 		</div>
+		<?php } ?>
+		<span class="notice">Your uploads are saved in cookies and then displayed here.</span>
 		
 		<footer>
 			<p id="by">
