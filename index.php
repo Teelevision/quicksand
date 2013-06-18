@@ -55,7 +55,7 @@ Requirements:
 PHP >= 5.0.0
 PHP extension SQLite
 
-Version: 0.2 beta (2013-06-18)
+Version: 0.2.0 (2013-06-18)
 
 How does Quicksand work?
 
@@ -82,13 +82,13 @@ define('LEGAL_NOTICE', "Marius Neugebauer • Steinkaulstraße 52 • 52070 Aach
 class Quicksand {
 	
 	/* You have to define a directory in which the files are stored. This directory should never be accessable through the web. Because that would be a bad privacy problem. Do not add a trailing slash. */
-	const FILES_DIR = '../quicksand_files_test';
+	const FILES_DIR = '../quicksand_files';
 	
 	/* This option helps you if you are using Apache2 and want to protect the directory. If you enable this, this script tries to create a .htaccess file within your files directory automatically. */
 	const FILES_DIR_PROTECTION = true;
 	
 	/* This script needs to store information and therefore uses SQLite. Define here where to store the database file. Make sure that this file is not accessable through the web. You can place it in the files directory */
-	const DATABASE_FILE = '../quicksand_files_test/images.db';
+	const DATABASE_FILE = '../quicksand_files/images.db';
 	
 	/* The user can choose how long the image should be online. Add options here. */
 	protected $expireOptions = array(
@@ -594,7 +594,7 @@ class Quicksand {
 				throw new QuicksandException("Delete code is wrong.");
 			}
 		} else {
-			throw new QuicksandException("The file ".$id." does not exist (anymore).");
+			throw new QuicksandException("The file you are looking for does not exist (anymore).");
 		}
 	}
 	
@@ -634,7 +634,7 @@ class Quicksand {
 	public function displayFile($id) {
 		/* check entry */
 		if (!isset($this->files[$id])) {
-			throw new QuicksandException("The file ".$id." does not exist (anymore).");
+			throw new QuicksandException("The file you are looking for does not exist (anymore).");
 		}
 		
 		/* check file */
@@ -674,8 +674,8 @@ class Quicksand {
 			case "image/gif": return "gif";
 			case "image/jpeg": return "jpg";
 			case "image/png": return "png";
-			case "image/x-icon": return "ico";
-			case "image/bmp": return "bmp";
+			case "image/x-icon": case "image/vnd.microsoft.icon": return "ico";
+			case "image/bmp": case "image/x-ms-bmp": return "bmp";
 			case "image/swf": return "swf";
 			case "text/html": return "htm";
 			default: return "";
