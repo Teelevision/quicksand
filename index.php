@@ -52,10 +52,10 @@ THE SOFTWARE.
 
 /*
 Requirements:
-PHP >= 5.0.0
-PHP extension SQLite
+PHP >= 5.3.0
+PHP extension SQLite3
 
-Version: 0.2.0 (2013-06-18)
+Version: 0.2.1 (2013-10-12)
 
 How does Quicksand work?
 
@@ -144,9 +144,6 @@ class Quicksand {
 	
 	/* stored files */
 	protected $files = array();
-	
-	/* true = SQLite3, false = SQLiteDatabase, null = auto */
-	protected $useSQLite3 = null;
 	
 	
 	function __construct() {
@@ -248,7 +245,7 @@ class Quicksand {
 			
 				/* insert into database */
 				$mime = $this->getUploader()->mime;
-				$this->execQuery("INSERT INTO files (id, time, del, size, mime, delcode) VALUES ('".$id."', ".$time.", ".$delTime.", ".$size.", '".$mime."', '".$delCode."');");
+				$this->db->exec("INSERT INTO files (id, time, del, size, mime, delcode) VALUES ('".$id."', ".$time.", ".$delTime.", ".$size.", '".$mime."', '".$delCode."');");
 				
 				/* set delete cookie */
 				if (self::COOKIES_ENABLED) {
@@ -311,7 +308,7 @@ class Quicksand {
 			$size = filesize($file);
 			
 			/* add entry */
-			$this->execQuery("INSERT INTO files (id, time, del, size, mime, delcode) VALUES ('".$id."', ".$time.", ".$delTime.", ".$size.", 'text/html', '".$delCode."');");
+			$this->db->exec("INSERT INTO files (id, time, del, size, mime, delcode) VALUES ('".$id."', ".$time.", ".$delTime.", ".$size.", 'text/html', '".$delCode."');");
 			
 			/* set delete cookie */
 			if (self::COOKIES_ENABLED) {
@@ -443,11 +440,7 @@ class Quicksand {
 	
 	/* initializes the SQLite database */
 	protected function connectDatabase() {
-		if ($this->useSQLite3()) {
-			$this->db = new SQLite3(self::DATABASE_FILE);
-		} else {
-			$this->db = new SQLiteDatabase(self::DATABASE_FILE);
-		}
+		$this->db = new SQLite3(self::DATABASE_FILE);
 		if (!$this->db) {
 			throw new QuicksandException("Initializing SQLite database failed.");
 		}
@@ -462,20 +455,6 @@ class Quicksand {
 		}
 	}
 	
-	/* returns true if you can use SQLite3 instead of SQLiteDatabase */
-	protected function useSQLite3() {
-		return $this->useSQLite3 === true || ($this->useSQLite3 !== false && $this->useSQLite3 = class_exists("SQLite3"));
-	}
-	
-	/* returns true if you can use SQLite3 instead of SQLiteDatabase */
-	protected function execQuery($query) {
-		if ($this->useSQLite3()) {
-			return $this->db->exec($query);
-		} else {
-			return $this->db->queryExec($query);
-		}
-	}
-	
 	/* initializes the SQLite database */
 	protected function loadFiles() {
 		$this->files = array();
@@ -484,7 +463,7 @@ class Quicksand {
 		$query = @$this->db->query('SELECT * FROM files ORDER BY time ASC');
 		if (!$query) {
 			/* table does not exist: create it */
-			$this->execQuery("CREATE TABLE files (
+			$this->db->exec("CREATE TABLE files (
 						id CHAR(".self::MAX_ID_LENGTH.") PRIMARY KEY,
 						time INTEGER,
 						del INTEGER,
@@ -494,7 +473,7 @@ class Quicksand {
 					);");
 		} else {
 			/* get files */
-			while ($entry = ($this->useSQLite3() ? $query->fetchArray(SQLITE3_ASSOC) : $query->fetch(SQLITE_ASSOC))) {
+			while ($entry = $query->fetchArray(SQLITE3_ASSOC)) {
 				$this->files[$entry['id']] = $entry;
 			}
 		}
@@ -546,7 +525,7 @@ class Quicksand {
 		}
 		
 		/* remove from database */
-		@$this->execQuery("DELETE FROM files WHERE id = '".$id."';");
+		@$this->db->exec("DELETE FROM files WHERE id = '".$id."';");
 		
 		/* remove from array */
 		if (isset($this->files[$id])) {
