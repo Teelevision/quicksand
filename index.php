@@ -855,18 +855,19 @@ try {
 		$quicksand->saveUpload();
 	}
 	
-	/* full page caching? why not zoidberg? */
-	/* is only executed if none of the above throws an exception */
-	/* get time when either this file or the db was modified */
-	$lastmodified = max(filemtime(__FILE__), filemtime(Quicksand::DATABASE_FILE));
-	if ($lastmodified) {
-		/* check if client gives a time of its cached file and if it is up to date */
-		if (!empty($_SERVER['HTTP_IF_MODIFIED_SINCE']) && strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) > $lastmodified) {
-			header("HTTP/1.1 304 Not Modified", true, 304);
-			exit;
-		}
-		header("Last-Modified: ".date(DATE_RFC1123, $lastmodified));
-	}
+	/* full page caching turned out to be bad */
+	// /* full page caching? why not zoidberg? */
+	// /* is only executed if none of the above throws an exception */
+	// /* get time when either this file or the db was modified */
+	// $lastmodified = max(filemtime(__FILE__), filemtime(Quicksand::DATABASE_FILE));
+	// if ($lastmodified) {
+		// /* check if client gives a time of its cached file and if it is up to date */
+		// if (!empty($_SERVER['HTTP_IF_MODIFIED_SINCE']) && strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) > $lastmodified) {
+			// header("HTTP/1.1 304 Not Modified", true, 304);
+			// exit;
+		// }
+		// header("Last-Modified: ".date(DATE_RFC1123, $lastmodified));
+	// }
 
 } catch (QuicksandException $e) {
 	$errorMessage = $e->getMessage();
