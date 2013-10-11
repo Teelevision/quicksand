@@ -84,14 +84,11 @@ class Quicksand {
 	/* You have to define a directory in which the files are stored. This directory should never be accessable through the web. Because that would be a bad privacy problem. Do not add a trailing slash. */
 	const FILES_DIR = '../quicksand_files';
 	
-	/* This option helps you if you are using Apache2 and want to protect the directory. If you enable this, this script tries to create a .htaccess file within your files directory automatically. */
-	const FILES_DIR_PROTECTION = true;
-	
 	/* This script needs to store information and therefore uses SQLite. Define here where to store the database file. Make sure that this file is not accessable through the web. You can place it in the files directory */
 	const DATABASE_FILE = '../quicksand_files/images.db';
 	
 	/* The user can choose how long the image should be online. Add options here. */
-	protected $expireOptions = array(
+	protected static $expireOptions = array(
 		1		=> "1 minute",
 		10		=> "10 minutes",
 		60		=> "1 hour",
@@ -205,7 +202,7 @@ class Quicksand {
 		
 		/* expire */
 		$expire = empty($_POST[self::UPLOAD_EXPIRE_NAME]) ? self::EXPIRE_DEFAULT : (int)$_POST[self::UPLOAD_EXPIRE_NAME];
-		if (!isset($this->expireOptions[$expire])) {
+		if (!isset(self::$expireOptions[$expire])) {
 			$expire = self::EXPIRE_DEFAULT;
 		}
 		$expire *= 60; // minutes to seconds
@@ -429,41 +426,18 @@ class Quicksand {
 	
 	/* creates the files dir if necessary and check if it is accessable */
 	protected function checkFilesDir() {
-		
-		/* check if files directory exists */
-		if (!is_dir(self::FILES_DIR)) {
-			/* create */
-			if (!@mkdir(self::FILES_DIR, 0700, true)) {
-				throw new QuicksandException("Cannot create files dir.");
-			}
+		$perms = @fileperms(self::FILES_DIR);
+		/* create if not exist */
+		if ($perms === false && !mkdir(self::FILES_DIR, 0700, true)) {
+			throw new QuicksandException("Cannot create files dir.");
 		}
-		
-		/* check if directory is readable, writable and executable */
-		if (!is_readable(self::FILES_DIR) || !is_writable(self::FILES_DIR) || !@file_exists(self::FILES_DIR."/.")) {
-			/* try to set rights */
-			@chmod(self::FILES_DIR, 0700); // owner
-			
-			if (!is_readable(self::FILES_DIR) || !is_writable(self::FILES_DIR) || !@file_exists(self::FILES_DIR."/.")) {
-				@chmod(self::FILES_DIR, 0770); // group
-				
-				if (!is_readable(self::FILES_DIR) || !is_writable(self::FILES_DIR) || !@file_exists(self::FILES_DIR."/.")) {
-					@chmod(self::FILES_DIR, 0777); // everyone
-					
-					/* throw error if still not all permissions */
-					if (!is_readable(self::FILES_DIR)) {
-						throw new QuicksandException("Cannot read files dir.");
-					} else if (!is_writable(self::FILES_DIR)) {
-						throw new QuicksandException("Cannot write to files dir.");
-					} else if (!@file_exists(self::FILES_DIR."/.")) {
-						throw new QuicksandException("Cannot execute in files dir.");
-					}
-				}
-			}
+		/* check if dir */
+		else if (($perms & 0x4000) != 0x4000) {
+			throw new QuicksandException("Files dir is not actually a directory.");
 		}
-		
-		/* check files dir protection */
-		if (self::FILES_DIR_PROTECTION && !is_file(self::FILES_DIR."/.htaccess") && !file_put_contents(self::FILES_DIR."/.htaccess", "deny from all\n")) {
-			throw new QuicksandException("Cannot create .htaccess file.");
+		/* check permissions */
+		else if (($perms & 0700) != 0700) {
+			throw new QuicksandException("Missing permissions. Make sure this script can read, write and enter the files dir.");
 		}
 	}
 	
@@ -802,8 +776,8 @@ class Quicksand {
 	}
 	
 	/* returns the expire options */
-	public function getExpireOptions() {
-		return $this->expireOptions;
+	public static function getExpireOptions() {
+		return self::$expireOptions;
 	}
 }
 
@@ -855,25 +829,11 @@ try {
 		$quicksand->saveUpload();
 	}
 	
-	/* full page caching turned out to be bad */
-	// /* full page caching? why not zoidberg? */
-	// /* is only executed if none of the above throws an exception */
-	// /* get time when either this file or the db was modified */
-	// $lastmodified = max(filemtime(__FILE__), filemtime(Quicksand::DATABASE_FILE));
-	// if ($lastmodified) {
-		// /* check if client gives a time of its cached file and if it is up to date */
-		// if (!empty($_SERVER['HTTP_IF_MODIFIED_SINCE']) && strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) > $lastmodified) {
-			// header("HTTP/1.1 304 Not Modified", true, 304);
-			// exit;
-		// }
-		// header("Last-Modified: ".date(DATE_RFC1123, $lastmodified));
-	// }
+	$uploads = $quicksand->getUserUploads();
 
 } catch (QuicksandException $e) {
 	$errorMessage = $e->getMessage();
 }
-
-$uploads = $quicksand->getUserUploads();
 
 ?><!DOCTYPE html>
 <html>
@@ -948,7 +908,7 @@ $uploads = $quicksand->getUserUploads();
 			<p title="After a maximum of this time the image link will stop providing your image. Images are deleted when this web page is called.">
 				2 Expire in ...
 				<select name="<?php echo Quicksand::UPLOAD_EXPIRE_NAME; ?>" onchange="saveExpireInCookie(this.value)">
-					<?php foreach ($quicksand->getExpireOptions() as $expire => $label) { ?><option value="<?php echo $expire; ?>"<?php echo ($expire == Quicksand::EXPIRE_DEFAULT) ? " selected" : ""; ?>><?php echo $label; ?></option><?php } ?>
+					<?php foreach (Quicksand::getExpireOptions() as $expire => $label) { ?><option value="<?php echo $expire; ?>"<?php echo ($expire == Quicksand::EXPIRE_DEFAULT) ? " selected" : ""; ?>><?php echo $label; ?></option><?php } ?>
 
 				</select>
 				<span class="notice">Your selection is saved in a browser cookie via JavaScript for 30 days. It is only used to remember your selection.</span>
