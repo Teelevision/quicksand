@@ -36,7 +36,7 @@ Requirements:
 PHP >= 5.3.0
 PHP extension SQLite3
 
-Version: 0.2.2 beta 2 (2013-10-14)
+Version: 0.2.2-beta-3 (2013-10-14)
 
 How does Quicksand work?
 Users can upload images which expire after the given time or earlier. A
@@ -152,7 +152,7 @@ class Quicksand {
 		while ($this->url !== '/' && strpos($_SERVER['REQUEST_URI'], $this->url) === false) {
 			$this->url = dirname($this->url);
 		}
-		if ($this->url != $_SERVER['SCRIPT_NAME']) {
+		if (substr($this->url, -1) != '/' && $this->url != $_SERVER['SCRIPT_NAME']) {
 			$this->url .= '/';
 		}
 		$this->entityUrl = $this->url === '/' ? '' : $this->url;
