@@ -1,5 +1,4 @@
 <?php
-// var_dump($_SERVER); exit;
 /*
 Quicksand Image Hoster
 visit http://code.teele.eu/quicksand
@@ -27,41 +26,40 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 /*
+Quick start:
+1. Adjust FILES_DIR and DATABASE_FILE. Make sure they aren't accessable
+   over the internet!
+2. Call script/webpage to create FILES_DIR and DATABASE_FILE.
+3. Adjust LEGAL_NOTICE.
+
 Requirements:
 PHP >= 5.3.0
 PHP extension SQLite3
 
-Version: 0.2.2 beta 1 (2013-10-14)
+Version: 0.2.2 beta 2 (2013-10-14)
 
 How does Quicksand work?
-
-Users can upload images and set a expiration time. The image is only
-accessable through this script within this expiration time. You define a
-maximum storage size. The oldest images are deleted when a new uplod
-would exceed the limit. Everytime the script is called it checks for
-expired images and deletes them. The script provides the functionality
-to download itself. That means that anyone can download this whole file
-unless you remove the responsible code.
+Users can upload images which expire after the given time or earlier. A
+gallery is created when uploading several images at once. This script
+deletes expired files when it is called. If the storage size that is
+shared by all users is exceeded, old images are deleted. The script
+provides a download link for its source to spread easily.
 */
 
-/* show all errors */
-// ini_set('display_errors', 1)
-// error_reporting(E_ALL);
-
 /* Charset of this file. */
-define('CHARSET', "UTF-8");
+define('CHARSET', 'UTF-8');
 
 /* The legal notice displayed at the bottom of the page. */
-define('LEGAL_NOTICE', "Marius Neugebauer • Steinkaulstr. 52 • 52070 Aachen • Germany • +49 (0) 1578 738 9019 • img@teele.eu");
+define('LEGAL_NOTICE', '');
 
 /* The Quicksand class. Make your settings here. */
 class Quicksand {
 	
 	/* You have to define a directory in which the files are stored in. This directory should never be accessable through the web. Because that would be a bad privacy problem. */
-	const FILES_DIR = '../quicksand_files';
+	const FILES_DIR = './quicksand_files';
 	
 	/* Metadata of the files is stored in a SQLite database. Define its location here. Make sure that this file is not accessable through the web. You can place it in the files directory.  */
-	const DATABASE_FILE = '../quicksand_files/_images.db';
+	const DATABASE_FILE = './quicksand_files/_images.db';
 	
 	/* The user can choose how long the image should be online max. Add options here. */
 	protected static $expireOptions = array(
@@ -79,7 +77,7 @@ class Quicksand {
 	const EXPIRE_DEFAULT = 7200;
 	
 	/* Maximum bytes to be stored. If someone uploads a file and there is no space left, the oldest files are deleted. Set to 0 if you do not want to limit the storage size. */
-	const MAX_STORAGE_SIZE = 134217728; // 128 MiB
+	const MAX_STORAGE_SIZE = 67108864; // 64 MiB
 	
 	/* Maximum file size in bytes or 0 for unlimited. */
 	const MAX_FILE_SIZE = 0;
@@ -98,8 +96,8 @@ class Quicksand {
 	
 	/* Fancy urls may require rewrite urls. Go with the compatible urls if you don't know how to configure your webserver accordingly. Also you can configure own patterns. You can use {id} for the image or gallery id and {#filename} for the image filename prepended with a '#'. You should always start with either '?' or '/'. */
 	/* compatible: */
-	// const URLPATTERN_IMAGE = '?img={id}{#filename}';
-	// const URLPATTERN_GALLERY = '?gallery={id}#gallery';
+	const URLPATTERN_IMAGE = '?img={id}{#filename}';
+	const URLPATTERN_GALLERY = '?gallery={id}#gallery';
 	/* fancy 1: */
 	// const URLPATTERN_IMAGE = '/image/{id}{#filename}';
 	// const URLPATTERN_GALLERY = '/gallery/{id}';
@@ -107,8 +105,8 @@ class Quicksand {
 	rewrite ^/image/([0-9a-zA-Z]+)$ /?img=$1 last;
 	rewrite ^/gallery/([0-9a-zA-Z]+)$ /?gallery=$1 last; */
 	/* fancy 2: */
-	const URLPATTERN_IMAGE = '/{id}{#filename}';
-	const URLPATTERN_GALLERY = '/~{id}';
+	// const URLPATTERN_IMAGE = '/{id}{#filename}';
+	// const URLPATTERN_GALLERY = '/~{id}';
 	/* You can use this nginx rules:
 	rewrite ^/([0-9a-zA-Z]+)$ /?img=$1 last;
 	rewrite ^/~([0-9a-zA-Z]+)$ /?gallery=$1 last; */
@@ -153,6 +151,9 @@ class Quicksand {
 		$this->url = $_SERVER['SCRIPT_NAME'];
 		while ($this->url !== '/' && strpos($_SERVER['REQUEST_URI'], $this->url) === false) {
 			$this->url = dirname($this->url);
+		}
+		if ($this->url != $_SERVER['SCRIPT_NAME']) {
+			$this->url .= '/';
 		}
 		$this->entityUrl = $this->url === '/' ? '' : $this->url;
 		$this->server = 'http'.(empty($_SERVER['HTTPS']) ? '' : 's').'://' // scheme
@@ -904,9 +905,11 @@ try {
 			<p id="by">
 				<a href="http://code.teele.eu/quicksand">Quicksand was coded by Teelevision</a> • <a href="<?php echo $quicksand->url; ?>?action=download" title="Download an exact copy of this script. You are free to host it yourself. See the license.">Download source</a>
 			</p>
+			<?php if (LEGAL_NOTICE != ''): ?>
 			<p id="legal_notice">
 				<?php echo LEGAL_NOTICE; ?>
 			</p>
+			<?php endif; ?>
 		</footer>
 		
 	</div>
