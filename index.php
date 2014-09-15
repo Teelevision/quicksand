@@ -42,8 +42,7 @@ How does Quicksand work?
 Users can upload images which expire after the given time or earlier. A
 gallery is created when uploading several images at once. This script
 deletes expired files when it is called. If the storage size that is
-shared by all users is exceeded, old images are deleted. The script
-provides a download link for its source to spread easily.
+shared by all users is exceeded, old images are deleted.
 */
 
 /* Charset of this file. */
@@ -624,18 +623,14 @@ class Quicksand {
 	
 	/* actions */
 	public function action($action) {
-		switch ($action) {
-			case 'download':
-				self::displaySource();
-			case 'favicon':
-				self::displayEmbeddedFile("favicon");
-			default:
-				throw new QuicksandException("Action is unknown.");
-		}
+		self::displayEmbeddedFile($action);
+		throw new QuicksandException("Action is unknown.");
 	}
 	
 	/* outputs the favicon */
 	public static function displayEmbeddedFile($file = "") {
+		if ($file != 'favicon') return;
+		
 		/* caching */
 		if ($lastmodified = filemtime(__FILE__)) {
 			/* check if client gives a time of its cached file and if it is up to date */
@@ -647,25 +642,10 @@ class Quicksand {
 		}
 		
 		/* output the file */
-		switch ($file) {
-			case 'favicon':
-				header('Content-Type: image/png');
-				header('Content-Length: 439');
-				echo base64_decode('iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABfklEQVQ4y63TP2uTURQG8N8JBVvUqrT+mWqwCOKgq5sO7kU3F2c/wFuiH0GNbh108wtkdhVExEFiEcFBfLFSES3EdmkIzXHIm5hG08lnuRfOc859nnPODWNotEqTuH+z7iDOjH9gMukgxPCSTYltvMV3vEMTvSimF/ijIBHmk2vSWoQHmEMfe9MsTCqAr7iCM1iPQi+bFbmYYiGb5vELMl0Q2sHpKr6CN/iCiyij8HNYoFadc6OK4VvwEbfRSR7jemX3Kp73m241WqVGq/xLwQ+cRyfTVoSFMbXHcTjZCLo4EYVurfK2jV0sJItSOZ6cg9hKFDaDrUrxqUarHFmAO5nWgxvCJaxl2pGeBR/Qrngnq6qz+6YA/YeWIyzhPbrSrDCDz8kRLAabFX3p7rlyY1yBe8vlJ7xI9pJd4Sxe4VjQk16P7c3O+BRGKxyFvtSJgbp2FOpVfx4ZqBsu3fS/UFvVN+i0bJKsBvXgJS4LRw/8TPuQDglP8LR6OfxP/AYFioEnuJlWhAAAAABJRU5ErkJggg==');
-				break;
-		}
-		exit;
-	}
-	
-	/* outputs this file */
-	public static function displaySource() {
-		/* get time when this file was modified */
-		if ($lastmodified = filemtime(__FILE__)) {
-			header("Last-Modified: ".date(DATE_RFC1123, $lastmodified));
-		}
-		header("Content-Type: text/plain; charset=".CHARSET);
-		header("Content-Length: ".filesize(__FILE__));
-		readfile(__FILE__);
+		/* only file: favicon */
+		header('Content-Type: image/png');
+		header('Content-Length: 439');
+		echo base64_decode('iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABfklEQVQ4y63TP2uTURQG8N8JBVvUqrT+mWqwCOKgq5sO7kU3F2c/wFuiH0GNbh108wtkdhVExEFiEcFBfLFSES3EdmkIzXHIm5hG08lnuRfOc859nnPODWNotEqTuH+z7iDOjH9gMukgxPCSTYltvMV3vEMTvSimF/ijIBHmk2vSWoQHmEMfe9MsTCqAr7iCM1iPQi+bFbmYYiGb5vELMl0Q2sHpKr6CN/iCiyij8HNYoFadc6OK4VvwEbfRSR7jemX3Kp73m241WqVGq/xLwQ+cRyfTVoSFMbXHcTjZCLo4EYVurfK2jV0sJItSOZ6cg9hKFDaDrUrxqUarHFmAO5nWgxvCJaxl2pGeBR/Qrngnq6qz+6YA/YeWIyzhPbrSrDCDz8kRLAabFX3p7rlyY1yBe8vlJ7xI9pJd4Sxe4VjQk16P7c3O+BRGKxyFvtSJgbp2FOpVfx4ZqBsu3fS/UFvVN+i0bJKsBvXgJS4LRw/8TPuQDglP8LR6OfxP/AYFioEnuJlWhAAAAABJRU5ErkJggg==');
 		exit;
 	}
 	
@@ -902,7 +882,7 @@ try {
 		
 		<footer>
 			<p id="by">
-				<a href="http://code.teele.eu/quicksand">Quicksand was coded by Teelevision</a> • <a href="<?php echo $quicksand->url; ?>?action=download" title="Download an exact copy of this script. You are free to host it yourself. See the license.">Download source</a>
+				<a href="https://code.teele.eu/quicksand">Quicksand was coded by Teelevision</a> • Download <a href="https://qsand.de/dl/latest-stable/index.php" title="Download this script. You are free to host it yourself. See the license.">stable</a>/<a href="https://qsand.de/dl/latest-unstable/index.php">beta</a>
 			</p>
 			<?php if (LEGAL_NOTICE != ''): ?>
 			<p id="legal_notice">
