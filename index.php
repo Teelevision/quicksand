@@ -792,9 +792,8 @@ try {
 	<meta http-equiv="content-type" content="text/html; charset=<?php echo CHARSET; ?>">
 	<meta name="description" lang="en" content="a short time image hosting tool">
 	<meta name="keywords" lang="en" content="quicksand,image,upload,hosting,share,temporary">
-	<meta name="robots" content="index,follow">
 	<link rel="shortcut icon" type="image/png" href="<?php echo $quicksand->url; ?>?action=favicon">
-	<title>Quicksand Image Hoster</title>
+	<title>Quicksand Image Hosting Tool</title>
 	<style type="text/css">
 	<!--
 	body { background-color: #fa6; background: -moz-linear-gradient(top, #ffd, #fff 120px, #fa6 400px) no-repeat #fa6; background: -o-linear-gradient(top, #ffd, #fff 120px, #fa6 400px) no-repeat #fa6; background: -webkit-linear-gradient(top, #ffd, #fff 120px, #fa6 400px) no-repeat #fa6; background: -ie-linear-gradient(top, #ffd, #fff 120px, #fa6 400px) no-repeat #fa6; background: linear-gradient(top, #ffd, #fff 120px, #fa6 400px) no-repeat #fa6; }
