@@ -93,22 +93,25 @@ class Quicksand {
 	const COOKIES_ENABLED = true;
 	const COOKIE_PREFIX = 'quicksand_';
 	
-	/* Fancy urls may require rewrite urls. Go with the compatible urls if you don't know how to configure your webserver accordingly. Also you can configure own patterns. You can use {id} for the image or gallery id and {#filename} for the image filename prepended with a '#'. You should always start with either '?' or '/'. */
+	/* Fancy urls may require rewrite urls. Go with the compatible urls if you don't know how to configure your webserver accordingly. Also you can configure own patterns. You can use {id} for the image or gallery id and {"#",filename} for the image filename prepended with a '#'. You should always start with either '?' or '/'. */
 	/* compatible: */
-	const URLPATTERN_IMAGE = '?img={id}{#filename}';
+	const URLPATTERN_IMAGE = '?img={id}{"#",filename}';
 	const URLPATTERN_GALLERY = '?gallery={id}#gallery';
 	/* fancy 1: */
-	// const URLPATTERN_IMAGE = '/image/{id}{#filename}';
+	// const URLPATTERN_IMAGE = '/image/{id}{"#",filename}';
 	// const URLPATTERN_GALLERY = '/gallery/{id}';
 	/* You can use this nginx rules:
 	rewrite ^/image/([0-9a-zA-Z]+)$ /?img=$1 last;
 	rewrite ^/gallery/([0-9a-zA-Z]+)$ /?gallery=$1 last; */
 	/* fancy 2: */
-	// const URLPATTERN_IMAGE = '/{id}{#filename}';
+	// const URLPATTERN_IMAGE = '/{id}{"#",filename}';
 	// const URLPATTERN_GALLERY = '/~{id}';
 	/* You can use this nginx rules:
 	rewrite ^/([0-9a-zA-Z]+)$ /?img=$1 last;
 	rewrite ^/~([0-9a-zA-Z]+)$ /?gallery=$1 last; */
+	/* fancy 3: */
+	// const URLPATTERN_IMAGE = '/{id}{"/",filebase}{".",extension}';
+	// const URLPATTERN_GALLERY = '/~{id}.html';
 	
 	/* allowed image types, see http://php.net/manual/function.image-type-to-mime-type.php */
 	protected $supportedImages = array(
@@ -268,7 +271,11 @@ class Quicksand {
 		if ($galleryId) {
 			header('Location: '.$this->entityUrl.self::galleryUrl($galleryId), true, 303);
 		} else {
-			header('Location: '.$this->entityUrl.self::imageUrl($imageId, reset($files['name'])), true, 303);
+			$data = array(
+				'filename' => reset($files['name']),
+				'type' => reset($files['type']),
+			);
+			header('Location: '.$this->entityUrl.self::imageUrl($imageId, $data), true, 303);
 		}
 		exit;
 	}
@@ -607,7 +614,7 @@ class Quicksand {
 <body>
 	<div>
 		<?php foreach ($files as $file) {
-			$imageUrl = $this->entityUrl.self::imageUrl($file['id']);
+			$imageUrl = $this->entityUrl.self::imageUrl($file['id'], $file);
 			?><a href="<?php echo $imageUrl; ?>">
 				<img alt="<?php echo $file['id']; ?>" src="<?php echo $imageUrl; ?>">
 			</a><?php
@@ -650,11 +657,22 @@ class Quicksand {
 	}
 	
 	/* returns the relative url for a image */
-	public static function imageUrl($id, $filename = '') {
-		return strtr(self::URLPATTERN_IMAGE, array(
-			'{id}' => $id,
-			'{#filename}' => $filename === '' ? '' : '#'.$filename,
-		));
+	public static function imageUrl($id, Array $data = array()) {
+		$search = $replace = array();
+		foreach (array(
+			'id' => $id,
+			'filename' => isset($data['filename']) ? $data['filename'] : '',
+			'filebase' => isset($data['filename']) ? pathinfo($data['filename'], PATHINFO_FILENAME) : '',
+			'extension' => isset($data['type']) ? image_type_to_extension($data['type'], false) : '',
+		) as $s => $r) {
+			if ($r != '') {
+				$search[] = '/{("([^"]+?)",)?'.$s.'(,"([^"]+?)")?}/i';
+				$replace[] = '\2'.$r.'\4';
+			}
+		}
+		$search[] = '/{.+?}/i';
+		$replace[] = '';
+		return preg_replace($search, $replace, self::URLPATTERN_IMAGE);
 	}
 	
 	/* returns the relative url for a gallery */
@@ -869,7 +887,7 @@ try {
 				<?php foreach ($uploads as $id => $data): ?>
 					<li>
 						<a href="?delimage=<?php echo $id; ?>&amp;delcode=<?php echo $data['delete_code']; ?>"><span class="delete"></span></a>
-						<a href="<?php echo $quicksand->entityUrl, Quicksand::imageUrl($id); ?>"><?php echo image_type_to_extension($data['type'], false); ?></a>,
+						<a href="<?php echo $quicksand->entityUrl, Quicksand::imageUrl($id, $data); ?>"><?php echo image_type_to_extension($data['type'], false); ?></a>,
 						<?php echo readable_bytes($data['size']); ?>,
 						<?php echo date(DATE_ATOM, $data['delete_time']); ?>
 					</li>
