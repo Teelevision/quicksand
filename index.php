@@ -1,7 +1,7 @@
 <?php
 /*
-Quicksand Image Hoster
-visit http://code.teele.eu/quicksand
+Quicksand Image Hosting Tool
+visit https://code.teele.eu/quicksand
 
 Copyright (C) 2013 Marius "Teelevision" Neugebauer
 
@@ -29,14 +29,14 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 Quick start:
 1. Adjust FILES_DIR and DATABASE_FILE. Make sure they aren't accessable
    over the internet!
-2. Call script/webpage to create FILES_DIR and DATABASE_FILE.
-3. Adjust LEGAL_NOTICE.
+2. Set LEGAL_NOTICE if you are required to provide contact information.
+3. Once the website is called FILES_DIR and DATABASE_FILE will be created.
 
 Requirements:
 PHP >= 5.3.0
 PHP extension SQLite3
 
-Version: 0.2.2-beta-3 (2013-10-14)
+Version: 0.2.2-beta-4 (2014-09-17)
 
 How does Quicksand work?
 Users can upload images which expire after the given time or earlier. A
@@ -48,9 +48,6 @@ shared by all users is exceeded, old images are deleted.
 /* Charset of this file. */
 define('CHARSET', 'UTF-8');
 
-/* The legal notice displayed at the bottom of the page. */
-define('LEGAL_NOTICE', '');
-
 /* The Quicksand class. Make your settings here. */
 class Quicksand {
 	
@@ -59,6 +56,9 @@ class Quicksand {
 	
 	/* Metadata of the files is stored in a SQLite database. Define its location here. Make sure that this file is not accessable through the web. You can place it in the files directory.  */
 	const DATABASE_FILE = './quicksand_files/_images.db';
+	
+	/* You can provide contact information here. It is then showed on the website. Some countries such as Germany require you by law to do so. */
+	const LEGAL_NOTICE = '';
 	
 	/* The user can choose how long the image should be online max. Add options here. */
 	protected static $expireOptions = array(
@@ -604,23 +604,35 @@ class Quicksand {
 	<style type="text/css">
 	<!--
 	body { background-image: url(data:image/gif;base64,R0lGODlhEAAQAKECAGZmZpmZmf///////yH5BAEKAAIALAAAAAAQABAAAAIfjG+gq4jM3IFLJgpswNly/XkcBpIiVaInlLJr9FZWAQA7); }
-	a { display: inline-block; float: left; margin: 5px; }
+	.gallery a { display: inline-block; float: left; margin: 5px; }
 	img { max-width: 600px; max-height: 600px; border: 1px solid white; }
+	footer { clear: left; padding-top: 50px; font-size: 12px; font-family: Arial,Helvetica,sans-serif; }
+	footer, footer a { color: white; }
 	-->
 	</style>
 </head>
 <body>
-	<div>
+	<div class="gallery">
 		<?php foreach ($files as $file) {
 			$imageUrl = $this->entityUrl.self::imageUrl($file['id'], $file);
 			?><a href="<?php echo $imageUrl; ?>">
 				<img alt="<?php echo $file['id']; ?>" src="<?php echo $imageUrl; ?>">
 			</a><?php
 		} ?>
+	</div>
+	<footer>
 		<a href="<?php echo $this->url; ?>">
 			<img alt="" src="<?php echo $this->url; ?>?action=favicon">
 		</a>
-	</div>
+		<p id="by">
+			<a href="https://code.teele.eu/quicksand">Quicksand was coded by Teelevision</a> • Download <a href="https://qsand.de/dl/latest-stable/index.php" title="Download this script. You are free to host it yourself. See the license.">stable</a>/<a href="https://qsand.de/dl/latest-unstable/index.php">beta</a>
+		</p>
+		<?php if (self::LEGAL_NOTICE != ''): ?>
+		<p id="legal_notice">
+			<?php echo self::LEGAL_NOTICE; ?>
+		</p>
+		<?php endif; ?>
+	</footer>
 </body>
 </html><?php
 	exit;
@@ -900,9 +912,9 @@ try {
 			<p id="by">
 				<a href="https://code.teele.eu/quicksand">Quicksand was coded by Teelevision</a> • Download <a href="https://qsand.de/dl/latest-stable/index.php" title="Download this script. You are free to host it yourself. See the license.">stable</a>/<a href="https://qsand.de/dl/latest-unstable/index.php">beta</a>
 			</p>
-			<?php if (LEGAL_NOTICE != ''): ?>
+			<?php if (Quicksand::LEGAL_NOTICE != ''): ?>
 			<p id="legal_notice">
-				<?php echo LEGAL_NOTICE; ?>
+				<?php echo Quicksand::LEGAL_NOTICE; ?>
 			</p>
 			<?php endif; ?>
 		</footer>
