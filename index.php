@@ -62,18 +62,16 @@ class Quicksand {
 	
 	/* The user can choose how long the image should be online max. Add options here. */
 	protected static $expireOptions = array(
-		60		=> "1 minute",
-		600		=> "10 minutes",
+		300		=> "5 minutes",
+		1200	=> "20 minutes",
 		3600	=> "1 hour",
-		7200	=> "2 hours",
+		21600	=> "6 hours",
 		86400	=> "1 day",
-		172800	=> "2 days",
 		604800	=> "1 week",
-		1209600	=> "2 weeks",
 		2592000	=> "1 month"
 	);
 	/* Which option should be selected by default? Set to the expiration time of one of the above options. */
-	const EXPIRE_DEFAULT = 7200;
+	const EXPIRE_DEFAULT = 3600;
 	
 	/* Maximum bytes to be stored. If someone uploads a file and there is no space left, the oldest files are deleted. Set to 0 if you do not want to limit the storage size. */
 	const MAX_STORAGE_SIZE = 67108864; // 64 MiB
