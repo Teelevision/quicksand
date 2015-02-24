@@ -36,7 +36,7 @@ Requirements:
 PHP >= 5.3.0
 PHP extension SQLite3
 
-Version: 0.2.2-beta-4 (2014-09-17)
+Version: 0.2.3 (2015-02-24)
 
 How does Quicksand work?
 Users can upload images which expire after the given time or earlier. A
@@ -573,7 +573,7 @@ class Quicksand {
 		/* output the file */
 		header('Content-Type: '.image_type_to_mime_type($data['type']));
 		header('Content-Length: '.$data['size']);
-		header('Content-Disposition: filename="'.$id.image_type_to_extension($data['type']).'";');
+		header('Content-Disposition: filename="'.$id.image_type_to_common_extension($data['type']).'";');
 		header('Cache-Control: max-age='.($data['delete_time'] - time()).', public');
 		readfile(self::getPath($id));
 		exit;
@@ -673,7 +673,7 @@ class Quicksand {
 			'id' => $id,
 			'filename' => isset($data['filename']) ? $data['filename'] : '',
 			'filebase' => isset($data['filename']) ? pathinfo($data['filename'], PATHINFO_FILENAME) : '',
-			'extension' => isset($data['type']) ? image_type_to_extension($data['type'], false) : '',
+			'extension' => isset($data['type']) ? image_type_to_common_extension($data['type'], false) : '',
 		) as $s => $r) {
 			if ($r != '') {
 				$search[] = '/{("([^"]+?)",)?'.$s.'(,"([^"]+?)")?}/i';
@@ -750,6 +750,54 @@ function readable_bytes($bytes) {
 	}
 }
 
+/* makes the time relative and better readable */
+function readable_time($timestamp) {
+	
+	/* units */
+	$units = array(
+		array(60, array('second', 'seconds')),
+		array(60, array('minute', 'minutes')),
+		array(24, array('hour', 'hours')),
+		array(7, array('day', 'days')),
+		array(30/7, array('week', 'weeks')),
+		array(12, array('month', 'months')),
+		array(10, array('year', 'years')),
+	);
+	
+	/* difference in seconds */
+	$diff = abs(time() - $timestamp);
+	$sign = (time() > $timestamp) ? -1 : 1;
+	
+	/* print function */
+	$print = function($count, Array $unit) {
+		if ($count > 0) {
+			return 'in '.abs($count).' '.$unit[$count != -1];
+		}
+		return $count.' '.$unit[$count != -1].' ago';
+	};
+	
+	/* evaluate */
+	foreach ($units as $unit) {
+		if ($diff < $unit[0]) {
+			return $print($sign * round($diff), $unit[1]);
+		}
+		$diff = $diff / $unit[0];
+	}
+	
+	/* fallback */
+	return date(DATE_ATOM, $timestamp);
+}
+
+/* returns common file extension from image type */
+function image_type_to_common_extension($imagetype, $include_dot = true) {
+	$replace = array(
+		'jpeg' => 'jpg',
+		'tiff' => 'tif',
+	);
+	$ext = image_type_to_extension($imagetype, $include_dot);
+	return isset($replace[$ext]) ? $replace[$ext] : $ext;
+}
+
 /* start Quicksand */
 $uploads = $galleries = array();
 try {
@@ -787,8 +835,11 @@ try {
 		$quicksand->upload($_FILES['image'], (int)$_POST['expire'], !!$_POST['short']);
 	}
 	
-	$uploads = $quicksand->getUserUploads();
-	$galleries = $quicksand->getUserGalleries();
+	$uploadedElements = $quicksand->getUserUploads() + $quicksand->getUserGalleries();
+	uasort($uploadedElements, function($a, $b) {
+		if ($a['delete_time'] == $b['delete_time']) return 0;
+		return ($a['delete_time'] > $b['delete_time']) ? -1 : 1;
+	});
 
 } catch (QuicksandException $e) {
 	$errorMessage = $e->getMessage();
@@ -809,18 +860,23 @@ try {
 	h1, h2 { display: inline; }
 	h1 a { text-decoration: none; }
 	h2 { font-size: 14px; }
+	h3 { font-size: 14px; margin: 0 }
 	a { color: black; }
 	p { margin: 8px 0; }
 	.error { background-color: #f85; border: 2px solid #f40; border-radius: 5px; padding: 5px 10px; }
 	#main > p { text-align: justify; }
 	#upload p { margin: 0; }
-	#upload p:first-letter { font-size: 40px; font-weight: bold; color: white; vertical-align: sub; }
+	#upload label:first-letter { margin: 0 10px 0 0; font-size: 40px; font-weight: bold; color: white; vertical-align: sub; }
+	#upload label { display: inline-block; width: 100px; }
 	button, select { border: 0; border-radius: 4px; background-color: #fff; padding: 5px 10px; cursor: pointer; }
 	button:hover { color: #fa6; }
 	select option { padding: 0 10px; }
 	footer { font-size: 80%; }
 	.notice { font-size: 80%; display: block; }
-	#uploads ul { list-style: none; margin: 0; padding: 5px 10px; max-height: 100px; overflow: auto; border: 5px solid white; border-radius: 4px; background-color: white; }
+	#uploads { max-height: 140px; overflow: auto; border: 5px solid white; border-radius: 4px; background-color: white; }
+	#uploads table { width: 100%; border-collapse: collapse; }
+	#uploads table th { text-align: left; font-weight: normal; }
+	#uploads table td { border-top: 1px solid #ddd; }
 	#uploads .delete { width: 16px; height: 16px; display: inline-block; vertical-align: middle; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAAZiS0dEAAAAAAAA+UO7fwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9oMEhUOCMokI9sAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAABgElEQVQ4y63TMWtTURjG8d+bphI76BLqmqU4HL+CkG/kIqXbPdkEQXDxGzi49SO0YBHB0aJ0UFHBwQpSa0zbJMfhJvUmpov4wnPh3HOf/+G873P5n3WYonqTorpqf7ur2u5avf8+RXWSovxIUT6vgDxNUb24HWWvpzQha/ApRdUlr89ebNC/txkefrUPL1NUW+Rpi7MLtq7pb7Y5GNpvQ4doo4VAwQ3ycQqnuE4eYR3tdhiPi1b9af2AUYq8TjUHFIxxgTOMcIrvE3aPy+DBsWx2KOgcloxBNKjR0Hz9nEvzAgDWDkueMpivS0PwmsH9tyU3Pa3lbk8oU6zS2R+WhSnM6yRF1SZPa5BJow/ndWP7N4WDYT2dBcDHFNUGeTI7bTzT+UwjDKf0olyO8BLwapaD6ZL5A4Mv7HfoD/FzWN/grxx8I24t5eAdg7v1ZDxJ4c6vxQi3GhEAz1LkoxTlKEXZTZGXm7XTlfd6yl5P2enKK/+HRyny4xXmJuRK87/Wb3MTloU75rlxAAAAAElFTkSuQmCC'); }
 	-->
 	</style>
@@ -861,17 +917,19 @@ try {
 
 		<form id="upload" action="<?php echo $quicksand->url; ?>" method="post" enctype="multipart/form-data">
 			<p<?php if (!$maxFiles || $maxFiles > 1): ?> title="You can select several files at once."<?php endif; ?>>
-				1 Select <input name="image[]" type="file"<?php if (!$maxFiles || $maxFiles > 1): ?> multiple<?php endif; ?> required>
+				<label for="upload-name">1 Image:</label>
+				<input id="upload-name" name="image[]" type="file"<?php if (!$maxFiles || $maxFiles > 1): ?> multiple<?php endif; ?> required>
 			</p>
 			<p title="After a maximum of this time the image link will stop providing your image. Images are deleted when this web page is called.">
-				2 Expire in ...
-				<select name="expire" onchange="saveExpire(this.value)">
+				<label for="upload-expire">2 Expire:</label>
+				<select id="upload-expire" name="expire" onchange="saveExpire(this.value)">
 					<?php foreach (Quicksand::getExpireOptions() as $expire => $label) { ?><option value="<?php echo $expire; ?>"<?php echo ($expire == Quicksand::EXPIRE_DEFAULT) ? " selected" : ""; ?>><?php echo $label; ?></option><?php } ?>
 
 				</select>
 				<?php if (Quicksand::COOKIES_ENABLED): ?><span class="notice">Your selection is saved in a browser cookie via JavaScript for 30 days. It is only used to remember your selection.</span><?php endif; ?>
 			</p>
-			<p>3 Upload:
+			<p>
+				<label>3 Upload:</label>
 				<button name="short" value="0" type="submit">Private url</button>
 				or
 				<button name="short" value="1" type="submit">Short url</button>
@@ -882,27 +940,32 @@ try {
 		<p title="This is the total storage size that is shared by all users. If it exceeds, new images edge out old ones.">Shared storage: <?php echo readable_bytes($quicksand->getUsedStorageSize()); echo $storageSize ? " / ".readable_bytes($storageSize) : ""; ?></p>
 		
 		<?php if (Quicksand::COOKIES_ENABLED): ?>
-			<?php if (count($uploads) || count($galleries)): ?>
+			<?php if (count($uploadedElements)): ?>
 			<div id="uploads">
-				Your uploads:
-				<ul>
-				<?php foreach ($galleries as $id => $data): ?>
-					<li>
-						<a href="?delgallery=<?php echo $id; ?>&amp;delcode=<?php echo $data['delete_code']; ?>"><span class="delete"></span></a>
-						<a href="<?php echo $quicksand->entityUrl, Quicksand::galleryUrl($id); ?>">gallery</a>,
-						<?php echo $data['num_images']; ?> images,
-						<?php echo date(DATE_ATOM, $data['delete_time']); ?>
-					</li>
+				<h3>Your uploads</h3>
+				<table>
+					<tr>
+						<th>Type</th>
+						<th>Size</th>
+						<th>Expires</th>
+						<th>Delete</th>
+					</tr>
+				<?php foreach ($uploadedElements as $id => $data): ?>
+					<tr>
+					<?php if (isset($data['num_images'])): ?>
+						<td><a href="<?php echo $quicksand->entityUrl, Quicksand::galleryUrl($id); ?>">gallery</a></td>
+						<td><?php echo $data['num_images']; ?> images</td>
+						<td><?php echo readable_time($data['delete_time']); ?></td>
+						<td><a href="?delgallery=<?php echo $id; ?>&amp;delcode=<?php echo $data['delete_code']; ?>"><span class="delete"></span></a></td>
+					<?php else: ?>
+						<td><a href="<?php echo $quicksand->entityUrl, Quicksand::imageUrl($id, $data); ?>"><?php echo image_type_to_common_extension($data['type'], false); ?></a></td>
+						<td><?php echo readable_bytes($data['size']); ?></td>
+						<td><?php echo readable_time($data['delete_time']); ?></td>
+						<td><a href="?delimage=<?php echo $id; ?>&amp;delcode=<?php echo $data['delete_code']; ?>"><span class="delete"></span></a></td>
+					<?php endif; ?>
+					</tr>
 				<?php endforeach; ?>
-				<?php foreach ($uploads as $id => $data): ?>
-					<li>
-						<a href="?delimage=<?php echo $id; ?>&amp;delcode=<?php echo $data['delete_code']; ?>"><span class="delete"></span></a>
-						<a href="<?php echo $quicksand->entityUrl, Quicksand::imageUrl($id, $data); ?>"><?php echo image_type_to_extension($data['type'], false); ?></a>,
-						<?php echo readable_bytes($data['size']); ?>,
-						<?php echo date(DATE_ATOM, $data['delete_time']); ?>
-					</li>
-				<?php endforeach; ?>
-				</ul>
+				</table>
 			</div>
 			<?php endif; ?>
 			<span class="notice">You are identified via browser cookie to provide you with a list of your uploads.</span>
